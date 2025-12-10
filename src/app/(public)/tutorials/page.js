@@ -3,7 +3,8 @@
 import { useTutorials } from '@/hooks/useData';
 import '@/_legacy/public/TutorialsPage.css';
 import { getTutorialCategories, getUnlockedTutorials } from '@/services/tutorialService';
-import { BookOpen, ChevronRight, Clock, Layers, Lock, Search, X } from 'lucide-react';
+import { BookOpen, ChevronRight, Clock, GraduationCap, Layers, Lock, Search, Sparkles, X } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -16,7 +17,6 @@ export default function TutorialsPage() {
 
     const { tutorials, loading } = useTutorials(true);
 
-    // Mark as mounted after hydration
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -29,7 +29,6 @@ export default function TutorialsPage() {
         loadCategories();
     }, []);
 
-    // Load unlocked tutorial IDs (only after mount to avoid hydration mismatch)
     useEffect(() => {
         if (!mounted) return;
         const loadUnlockedStatus = async () => {
@@ -40,10 +39,14 @@ export default function TutorialsPage() {
     }, [mounted]);
 
     if (loading || !mounted) {
-        return <div className="loading-container">Loading...</div>;
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner-large" />
+                <p>Loading tutorials...</p>
+            </div>
+        );
     }
 
-    // Filter tutorials
     const filteredTutorials = (tutorials || []).filter(tutorial => {
         const matchesSearch = !searchQuery ||
             tutorial.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,20 +55,20 @@ export default function TutorialsPage() {
         return matchesSearch && matchesCategory;
     });
 
-    const getDifficultyColor = (difficulty) => {
+    const getDifficultyStyle = (difficulty) => {
         switch (difficulty) {
-            case 'beginner': return 'badge-success';
-            case 'intermediate': return 'badge-warning';
-            case 'advanced': return 'badge-error';
-            default: return 'badge-secondary';
+            case 'beginner': return { bg: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' };
+            case 'intermediate': return { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)' };
+            case 'advanced': return { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' };
+            default: return { bg: 'rgba(100, 116, 139, 0.15)', color: '#64748b', border: 'rgba(100, 116, 139, 0.3)' };
         }
     };
 
     const getDifficultyLabel = (difficulty) => {
         switch (difficulty) {
-            case 'beginner': return 'Pemula';
-            case 'intermediate': return 'Menengah';
-            case 'advanced': return 'Lanjutan';
+            case 'beginner': return 'Beginner';
+            case 'intermediate': return 'Intermediate';
+            case 'advanced': return 'Advanced';
             default: return difficulty;
         }
     };
@@ -75,30 +78,46 @@ export default function TutorialsPage() {
         setSelectedCategory('');
     };
 
-    // Helper function to check if tutorial is unlocked (synchronous)
     const isUnlocked = (tutorialId) => unlockedTutorialIds.includes(tutorialId);
-
     const hasFilters = searchQuery || selectedCategory;
 
     return (
         <div className="tutorials-page">
-            {/* Simple Hero with Search */}
+            {/* Hero Section */}
             <section className="tutorials-hero">
-                <div className="container">
-                    <h1>Mini Tutorial</h1>
-                    <p>Panduan step-by-step untuk belajar teknologi</p>
+                <div className="tutorials-hero-bg">
+                    <div className="hero-orb orb-1" />
+                    <div className="hero-orb orb-2" />
+                    <div className="hero-grid-pattern" />
+                </div>
 
-                    {/* Integrated Search */}
-                    <div className="hero-search">
-                        <Search size={20} />
+                <div className="container tutorials-hero-content">
+                    <div className="hero-badge">
+                        <Sparkles size={14} />
+                        <span>Step-by-Step Guides</span>
+                    </div>
+
+                    <h1 className="tutorials-hero-title">
+                        <span>Learn & Build with</span>
+                        <span className="gradient-text">Mini Tutorials</span>
+                    </h1>
+
+                    <p className="tutorials-hero-description">
+                        Comprehensive guides to help you master new technologies and build amazing projects
+                    </p>
+
+                    {/* Search Box */}
+                    <div className="hero-search-box">
+                        <Search size={20} className="search-icon" />
                         <input
                             type="text"
-                            placeholder="Cari tutorial..."
+                            placeholder="Search tutorials..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            className="hero-search-input"
                         />
                         {searchQuery && (
-                            <button className="clear-search" onClick={() => setSearchQuery('')}>
+                            <button className="search-clear" onClick={() => setSearchQuery('')}>
                                 <X size={16} />
                             </button>
                         )}
@@ -108,15 +127,16 @@ export default function TutorialsPage() {
                     {categories.length > 0 && (
                         <div className="category-pills">
                             <button
-                                className={`pill ${!selectedCategory ? 'active' : ''}`}
+                                className={`category-pill ${!selectedCategory ? 'active' : ''}`}
                                 onClick={() => setSelectedCategory('')}
                             >
-                                Semua
+                                <Layers size={14} />
+                                All Tutorials
                             </button>
                             {categories.map(cat => (
                                 <button
                                     key={cat}
-                                    className={`pill ${selectedCategory === cat ? 'active' : ''}`}
+                                    className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
                                     onClick={() => setSelectedCategory(cat)}
                                 >
                                     {cat}
@@ -124,137 +144,145 @@ export default function TutorialsPage() {
                             ))}
                         </div>
                     )}
+
+                    {/* Stats */}
+                    <div className="tutorials-stats">
+                        <div className="stat-item">
+                            <span className="stat-number">{tutorials.length}</span>
+                            <span className="stat-text">Tutorials</span>
+                        </div>
+                        <div className="stat-divider" />
+                        <div className="stat-item">
+                            <span className="stat-number">{categories.length}</span>
+                            <span className="stat-text">Categories</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            {/* Results */}
-            <section className="tutorials-list">
-                <div className="container">
-                    {/* Results Header */}
-                    <div className="list-header">
-                        <span className="results-info">
-                            {filteredTutorials.length} tutorial {hasFilters && 'ditemukan'}
-                        </span>
-                        {hasFilters && (
-                            <button className="clear-filters" onClick={clearFilters}>
-                                <X size={14} />
-                                Hapus filter
-                            </button>
-                        )}
+            {/* Tutorials Grid Section */}
+            <section className="tutorials-content container">
+                {/* Header */}
+                <div className="content-header">
+                    <div className="results-info">
+                        <span className="results-count">{filteredTutorials.length}</span>
+                        <span>{filteredTutorials.length === 1 ? 'tutorial' : 'tutorials'} found</span>
+                        {selectedCategory && <span className="filter-tag">in {selectedCategory}</span>}
                     </div>
 
-                    {filteredTutorials.length === 0 ? (
-                        <div className="empty-state">
-                            <BookOpen size={40} />
-                            <h3>Tidak ada tutorial</h3>
-                            <p>Coba kata kunci atau kategori lain</p>
-                            <button className="btn btn-secondary" onClick={clearFilters}>
-                                Reset Filter
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="tutorials-grid">
-                            {filteredTutorials.map(tutorial => {
-                                const tutorialIsUnlocked = !tutorial.is_premium || isUnlocked(tutorial.id);
-                                const isLocked = tutorial.is_premium && !tutorialIsUnlocked;
+                    {hasFilters && (
+                        <button className="clear-filters-btn" onClick={clearFilters}>
+                            <X size={14} />
+                            Clear filters
+                        </button>
+                    )}
+                </div>
 
-                                return (
-                                    <Link
-                                        key={tutorial.id}
-                                        href={`/tutorials/${tutorial.slug}`}
-                                        className={`tutorial-card ${isLocked ? 'is-locked' : ''}`}
-                                        style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}
-                                    >
-                                        <div className="card-thumbnail">
-                                            {tutorial.thumbnail ? (
-                                                <img src={tutorial.thumbnail} alt={tutorial.title} />
-                                            ) : (
-                                                <div className="thumbnail-placeholder">
-                                                    <BookOpen size={28} />
-                                                </div>
-                                            )}
-                                            <span className={`difficulty-badge ${getDifficultyColor(tutorial.difficulty)}`}>
+                {filteredTutorials.length === 0 ? (
+                    <div className="empty-state-modern">
+                        <div className="empty-icon-wrapper">
+                            <BookOpen size={48} strokeWidth={1.5} />
+                        </div>
+                        <h3>No tutorials found</h3>
+                        <p>Try a different search term or category</p>
+                        <button className="btn btn-primary" onClick={clearFilters}>
+                            Reset Filters
+                        </button>
+                    </div>
+                ) : (
+                    <div className="tutorials-grid">
+                        {filteredTutorials.map((tutorial, index) => {
+                            const tutorialIsUnlocked = !tutorial.is_premium || isUnlocked(tutorial.id);
+                            const isLocked = tutorial.is_premium && !tutorialIsUnlocked;
+                            const diffStyle = getDifficultyStyle(tutorial.difficulty);
+
+                            return (
+                                <Link
+                                    key={tutorial.id}
+                                    href={`/tutorials/${tutorial.slug}`}
+                                    className={`tutorial-card-modern ${isLocked ? 'is-locked' : ''}`}
+                                    style={{ '--delay': `${index * 0.05}s` }}
+                                >
+                                    <div className="tutorial-thumbnail">
+                                        {tutorial.thumbnail ? (
+                                            <Image
+                                                src={tutorial.thumbnail}
+                                                alt={tutorial.title}
+                                                width={400}
+                                                height={200}
+                                                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                            />
+                                        ) : (
+                                            <div className="thumbnail-placeholder">
+                                                <GraduationCap size={36} strokeWidth={1.5} />
+                                            </div>
+                                        )}
+
+                                        {/* Badges */}
+                                        <div className="tutorial-badges">
+                                            <span
+                                                className="difficulty-badge"
+                                                style={{
+                                                    background: diffStyle.bg,
+                                                    color: diffStyle.color,
+                                                    borderColor: diffStyle.border
+                                                }}
+                                            >
                                                 {getDifficultyLabel(tutorial.difficulty)}
                                             </span>
                                             {tutorial.is_premium && (
-                                                <div className={`premium-badge ${tutorialIsUnlocked ? 'unlocked' : ''}`}>
-                                                    <Lock size={12} />
+                                                <span className={`premium-badge ${tutorialIsUnlocked ? 'unlocked' : ''}`}>
+                                                    <Lock size={10} />
                                                     {tutorialIsUnlocked ? 'Unlocked' : 'Premium'}
-                                                </div>
+                                                </span>
                                             )}
                                         </div>
-                                        <div className="card-body">
-                                            <h3>{tutorial.title}</h3>
-                                            {tutorial.description && (
-                                                <p>{tutorial.description}</p>
-                                            )}
-                                            <div className="card-footer">
-                                                <div className="card-meta">
-                                                    <span><Clock size={14} /> {tutorial.estimated_time || '10 min'}</span>
-                                                    <span><Layers size={14} /> {tutorial.steps?.length || 0} step</span>
-                                                </div>
-                                                {!isLocked && <ChevronRight size={18} className="card-arrow" />}
+
+                                        {/* Locked Overlay */}
+                                        {isLocked && (
+                                            <div className="locked-overlay">
+                                                <Lock size={28} />
+                                                <span>Unlock Required</span>
                                             </div>
-                                            {isLocked && (
-                                                <div className="locked-overlay">
-                                                    <Lock size={24} />
-                                                    <span>Unlock Required</span>
-                                                </div>
+                                        )}
+                                    </div>
+
+                                    <div className="tutorial-body">
+                                        {tutorial.category && (
+                                            <span className="tutorial-category">{tutorial.category}</span>
+                                        )}
+
+                                        <h3 className="tutorial-title">{tutorial.title}</h3>
+
+                                        {tutorial.description && (
+                                            <p className="tutorial-desc">{tutorial.description}</p>
+                                        )}
+
+                                        <div className="tutorial-footer">
+                                            <div className="tutorial-meta">
+                                                <span className="meta-item">
+                                                    <Clock size={14} />
+                                                    {tutorial.estimated_time || '10 min'}
+                                                </span>
+                                                <span className="meta-item">
+                                                    <Layers size={14} />
+                                                    {tutorial.steps?.length || 0} steps
+                                                </span>
+                                            </div>
+
+                                            {!isLocked && (
+                                                <span className="start-btn">
+                                                    Start <ChevronRight size={16} />
+                                                </span>
                                             )}
                                         </div>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
             </section>
         </div>
     );
 }
-
-function TutorialCardContent({ tutorial, isLocked, isUnlocked, getDifficultyColor, getDifficultyLabel }) {
-    return (
-        <div className="card-inner">
-            <div className="card-thumbnail">
-                {tutorial.thumbnail ? (
-                    <img src={tutorial.thumbnail} alt={tutorial.title} />
-                ) : (
-                    <div className="thumbnail-placeholder">
-                        <BookOpen size={28} />
-                    </div>
-                )}
-                <span className={`difficulty-badge ${getDifficultyColor(tutorial.difficulty)}`}>
-                    {getDifficultyLabel(tutorial.difficulty)}
-                </span>
-                {tutorial.is_premium && (
-                    <div className={`premium-badge ${isUnlocked ? 'unlocked' : ''}`}>
-                        <Lock size={12} />
-                        {isUnlocked ? 'Unlocked' : 'Premium'}
-                    </div>
-                )}
-            </div>
-            <div className="card-body">
-                <h3>{tutorial.title}</h3>
-                {tutorial.description && (
-                    <p>{tutorial.description}</p>
-                )}
-                <div className="card-footer">
-                    <div className="card-meta">
-                        <span><Clock size={14} /> {tutorial.estimated_time || '10 min'}</span>
-                        <span><Layers size={14} /> {tutorial.steps?.length || 0} step</span>
-                    </div>
-                    {!isLocked && <ChevronRight size={18} className="card-arrow" />}
-                </div>
-                {isLocked && (
-                    <div className="locked-overlay">
-                        <Lock size={24} />
-                        <span>Unlock Required</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-

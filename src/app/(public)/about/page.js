@@ -2,13 +2,18 @@
 
 import '@/_legacy/public/AboutPage.css';
 import { useSettings } from '@/services/settingsService';
-import { Briefcase, Github, Linkedin, Mail, MapPin, Twitter } from 'lucide-react';
+import { Briefcase, Code, Github, Linkedin, Mail, MapPin, Sparkles, Twitter } from 'lucide-react';
 
 export default function AboutPage() {
     const { settings, loading } = useSettings();
 
     if (loading || !settings) {
-        return <div className="loading-container">Loading...</div>;
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner-large" />
+                <p>Loading...</p>
+            </div>
+        );
     }
 
     const { profile, social, site } = settings;
@@ -28,79 +33,111 @@ export default function AboutPage() {
 
     return (
         <div className="about-page">
-            <div className="container">
-                {/* Profile Section */}
-                <section className="profile-section">
-                    <div className="profile-image">
-                        <div className="profile-placeholder">
-                            <span>{'</>'}</span>
-                        </div>
+            {/* Hero Section */}
+            <section className="about-hero">
+                <div className="about-hero-bg">
+                    <div className="hero-orb orb-1" />
+                    <div className="hero-orb orb-2" />
+                    <div className="hero-grid-pattern" />
+                </div>
+
+                <div className="container about-hero-content">
+                    <div className="hero-badge">
+                        <Sparkles size={14} />
+                        <span>About Me</span>
                     </div>
 
-                    <div className="profile-info">
-                        <h1 className="profile-name">
-                            Hi, I'm <span className="gradient-text">{profile?.name || 'Developer'}</span>
-                        </h1>
-
-                        <div className="profile-meta">
-                            <span className="meta-item">
-                                <Briefcase size={18} />
-                                {profile?.role || 'Developer'}
-                            </span>
-                            <span className="meta-item">
-                                <MapPin size={18} />
-                                {profile?.location || 'Indonesia'}
-                            </span>
+                    <div className="profile-card-modern">
+                        <div className="profile-avatar">
+                            <div className="avatar-glow" />
+                            <div className="avatar-inner">
+                                <Code size={48} strokeWidth={1.5} />
+                            </div>
                         </div>
 
-                        <p className="profile-bio">
-                            {profile?.bio || 'A passionate developer.'}
-                        </p>
+                        <div className="profile-content">
+                            <h1 className="profile-name">
+                                Hi, I'm <span className="gradient-text">{profile?.name || 'Developer'}</span>
+                            </h1>
 
-                        <div className="profile-social">
-                            {socialLinks.map(({ icon: Icon, href, label }) => (
-                                <a
-                                    key={label}
-                                    href={href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="social-link"
-                                    aria-label={label}
+                            <div className="profile-meta">
+                                <span className="meta-chip">
+                                    <Briefcase size={16} />
+                                    {profile?.role || 'Developer'}
+                                </span>
+                                <span className="meta-chip">
+                                    <MapPin size={16} />
+                                    {profile?.location || 'Indonesia'}
+                                </span>
+                            </div>
+
+                            <p className="profile-bio">
+                                {profile?.bio || 'A passionate developer who loves building things for the web.'}
+                            </p>
+
+                            <div className="profile-social">
+                                {socialLinks.map(({ icon: Icon, href, label }) => (
+                                    <a
+                                        key={label}
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="social-btn"
+                                        aria-label={label}
+                                    >
+                                        <Icon size={20} />
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div className="container">
+                {/* Skills Section */}
+                {profile?.skills?.length > 0 && (
+                    <section className="skills-section">
+                        <div className="section-header">
+                            <div className="section-label">
+                                <Code size={14} />
+                                <span>Skills & Technologies</span>
+                            </div>
+                        </div>
+
+                        <div className="skills-bento">
+                            {profile.skills.map(({ category, items }, index) => (
+                                <div
+                                    key={category}
+                                    className={`skill-card-modern ${index === 0 ? 'featured' : ''}`}
+                                    style={{ '--delay': `${index * 0.1}s` }}
                                 >
-                                    <Icon size={20} />
-                                </a>
+                                    <h3 className="skill-category">{category}</h3>
+                                    <div className="skill-tags">
+                                        {items.map(item => (
+                                            <span key={item} className="skill-tag">{item}</span>
+                                        ))}
+                                    </div>
+                                </div>
                             ))}
                         </div>
-                    </div>
-                </section>
-
-                {/* Skills Section */}
-                <section className="skills-section">
-                    <h2 className="section-title">Skills & Technologies</h2>
-
-                    <div className="skills-grid">
-                        {(profile?.skills || []).map(({ category, items }) => (
-                            <div key={category} className="skill-card card">
-                                <h3 className="skill-category">{category}</h3>
-                                <div className="skill-items">
-                                    {items.map(item => (
-                                        <span key={item} className="skill-item">{item}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                    </section>
+                )}
 
                 {/* About Blog Section */}
-                <section className="blog-info-section">
-                    <div className="blog-info-card card-glass">
-                        <h2>{site?.aboutBlogTitle || 'About This Blog'}</h2>
-                        {(site?.aboutBlogDescription || '').split('\n\n').map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                        ))}
-                    </div>
-                </section>
+                {site?.aboutBlogTitle && (
+                    <section className="blog-info-section">
+                        <div className="blog-info-card-modern">
+                            <div className="card-glow" />
+                            <div className="card-content">
+                                <h2>{site.aboutBlogTitle}</h2>
+                                {(site.aboutBlogDescription || '').split('\n\n').map((paragraph, index) => (
+                                    <p key={index}>{paragraph}</p>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );
