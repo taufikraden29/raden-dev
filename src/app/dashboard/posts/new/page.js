@@ -571,6 +571,30 @@ export default function PostEditorPage({ params }) {
                     </div>
                 </div>
             )}
+
+            {/* Floating Action Bar */}
+            <div className="floating-action-bar">
+                <div className="floating-bar-info">
+                    <span className="word-count"><FileText size={14} /> {wordCount} words</span>
+                    <span className="reading-time"><Clock size={14} /> {readingTime} min</span>
+                    {autoSaveStatus === 'saved' && (
+                        <span className="autosave-badge"><CheckCircle2 size={14} /> Draft saved</span>
+                    )}
+                </div>
+                <label className="form-checkbox publish-checkbox">
+                    <input type="checkbox" name="published" checked={formData.published} onChange={handleChange} />
+                    <span>Publish</span>
+                </label>
+                <button
+                    type="submit"
+                    form="post-form"
+                    className="btn btn-primary"
+                    disabled={isSaving}
+                >
+                    {isSaving ? <span className="spinner-small" /> : <Save size={18} />}
+                    <span>{isSaving ? 'Saving...' : 'Save Post'}</span>
+                </button>
+            </div>
         </div>
     );
 }

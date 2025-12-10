@@ -255,6 +255,33 @@ export default function TutorialEditorPage({ params }) {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Action Bar */}
+            <div className="floating-action-bar">
+                <div className="floating-bar-info">
+                    <span className="steps-count">{formData.steps.length} langkah</span>
+                    <span className="difficulty-badge">{formData.difficulty}</span>
+                </div>
+                <label className="form-checkbox publish-checkbox">
+                    <input type="checkbox" name="published" checked={formData.published} onChange={handleChange} />
+                    <span>Publish</span>
+                </label>
+                <button
+                    type="button"
+                    className={`btn ${previewMode ? 'btn-secondary' : 'btn-ghost'}`}
+                    onClick={() => setPreviewMode(!previewMode)}
+                >
+                    {previewMode ? 'Edit' : 'Preview'}
+                </button>
+                <button
+                    onClick={handleSubmit}
+                    className="btn btn-primary"
+                    disabled={isSaving}
+                >
+                    {isSaving ? <span className="spinner-small" /> : <Save size={18} />}
+                    <span>{isSaving ? 'Menyimpan...' : 'Simpan'}</span>
+                </button>
+            </div>
         </div>
     );
 }
