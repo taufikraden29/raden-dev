@@ -477,7 +477,7 @@ const SettingsPage = () => {
                                             const newLink = {
                                                 id: Date.now().toString(),
                                                 platform: 'New Link',
-                                                url: 'https://',
+                                                url: '',
                                                 icon: 'Link'
                                             };
                                             const newSocial = [...settings.social, newLink];

@@ -4,6 +4,18 @@
 import { handleSupabaseError, supabase } from '@/lib/supabaseClient';
 import { useEffect, useState } from 'react';
 
+// Helper to sanitize URLs - fix duplicate protocol issue
+const sanitizeUrl = (url) => {
+    if (!url) return '';
+    // Remove duplicate protocols (https://https:// or http://https:// etc)
+    let cleanUrl = url.replace(/^(https?:\/\/)+/i, 'https://');
+    // If URL doesn't start with protocol, add https://
+    if (cleanUrl && !cleanUrl.match(/^https?:\/\//i) && !cleanUrl.match(/^mailto:/i)) {
+        cleanUrl = 'https://' + cleanUrl;
+    }
+    return cleanUrl;
+};
+
 // Default settings (fallback)
 const defaultSettings = {
     hero: {
@@ -226,7 +238,7 @@ export const updateSocialSettings = async (socialLinks) => {
         if (socialLinks && socialLinks.length > 0) {
             const linksData = socialLinks.map((link, index) => ({
                 platform: link.platform,
-                url: link.url,
+                url: sanitizeUrl(link.url),
                 icon: link.icon,
                 display_order: index + 1
             }));
@@ -266,7 +278,7 @@ export const addSocialLink = async (link) => {
             .from('social_links')
             .insert([{
                 platform: link.platform,
-                url: link.url,
+                url: sanitizeUrl(link.url),
                 icon: link.icon,
                 display_order: nextOrder
             }])
@@ -291,7 +303,7 @@ export const updateSocialLink = async (id, link) => {
             .from('social_links')
             .update({
                 platform: link.platform,
-                url: link.url,
+                url: sanitizeUrl(link.url),
                 icon: link.icon
             })
             .eq('id', id)

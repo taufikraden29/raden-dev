@@ -233,7 +233,7 @@ export default function SettingsPage() {
                             <div className="social-links-editor">
                                 <div className="projects-header"><h3 className="subsection-title">Links</h3>
                                     <button className="btn btn-secondary btn-sm" onClick={() => {
-                                        const newLink = { id: Date.now().toString(), platform: 'New Link', url: 'https://', icon: 'Link' };
+                                        const newLink = { id: Date.now().toString(), platform: 'New Link', url: '', icon: 'Link' };
                                         setSettings(prev => ({ ...prev, social: [...prev.social, newLink] }));
                                     }}><Plus size={16} /> Add Link</button>
                                 </div>

@@ -16,6 +16,18 @@ const iconMap = {
 // Current year - calculated once at module load
 const currentYear = new Date().getFullYear();
 
+// Sanitize URL - fix duplicate protocol issue
+const sanitizeUrl = (url) => {
+    if (!url) return '';
+    // Remove duplicate protocols (https://https:// or http://https:// etc)
+    let cleanUrl = url.replace(/^(https?:\/\/)+/i, 'https://');
+    // If URL doesn't start with protocol, add https://
+    if (cleanUrl && !cleanUrl.match(/^https?:\/\//i)) {
+        cleanUrl = 'https://' + cleanUrl;
+    }
+    return cleanUrl;
+};
+
 const Footer = memo(function Footer() {
     const { settings, loading } = useSettings();
 
@@ -78,7 +90,7 @@ const Footer = memo(function Footer() {
                             return (
                                 <a
                                     key={id}
-                                    href={url}
+                                    href={sanitizeUrl(url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="social-link"
