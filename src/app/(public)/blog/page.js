@@ -2,12 +2,12 @@
 
 import BlogCard from '@/components/ui/BlogCard';
 import { useCategories, usePosts } from '@/hooks/useData';
-import '@/pages/public/BlogListPage.css';
+import '@/_legacy/public/BlogListPage.css';
 import { Filter, Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 
-export default function BlogListPage() {
+function BlogListContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -147,5 +147,13 @@ export default function BlogListPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function BlogListPage() {
+    return (
+        <Suspense fallback={<div className="loading-container">Loading...</div>}>
+            <BlogListContent />
+        </Suspense>
     );
 }

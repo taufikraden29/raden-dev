@@ -2,7 +2,7 @@
 
 import BlogCard from '@/components/ui/BlogCard';
 import { usePosts } from '@/hooks/useData';
-import '@/pages/public/HomePage.css';
+import '@/_legacy/public/HomePage.css';
 import { useSettings } from '@/services/settingsService';
 import { ArrowRight, BookOpen, Code, Globe, Heart, Rocket, Shield, Star, Zap } from 'lucide-react';
 import Link from 'next/link';

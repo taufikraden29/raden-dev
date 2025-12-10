@@ -1,6 +1,6 @@
 'use client';
 
-import ProjectScriptsPage from '@/pages/dashboard/ProjectScriptsPage';
+import ProjectScriptsPage from '@/components/scripts/ProjectScriptsPage';
 
 export default function Page() {
   return <ProjectScriptsPage />;

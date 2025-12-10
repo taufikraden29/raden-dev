@@ -2,7 +2,7 @@
 
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useTutorials } from '@/hooks/useData';
-import '@/pages/dashboard/TutorialsListPage.css';
+import '@/_legacy/dashboard/TutorialsListPage.css';
 import { deleteTutorial } from '@/services/tutorialService';
 import { BookOpen, Clock, Edit, Eye, Layers, Lock, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';

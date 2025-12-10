@@ -2,7 +2,7 @@
 
 import Sidebar from '@/components/dashboard/Sidebar';
 import { useAuth } from '@/contexts/authContext';
-import '@/pages/dashboard/DashboardLayout.css';
+import '@/_legacy/dashboard/DashboardLayout.css';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 

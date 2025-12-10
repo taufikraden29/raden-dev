@@ -4,7 +4,7 @@ import BlogCard from '@/components/ui/BlogCard';
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 import TableOfContents from '@/components/ui/TableOfContents';
 import { usePost } from '@/hooks/useData';
-import '@/pages/public/BlogDetailPage.css';
+import '@/_legacy/public/BlogDetailPage.css';
 import { getPublishedPosts } from '@/services/blogService';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar, Clock, Tag, User } from 'lucide-react';

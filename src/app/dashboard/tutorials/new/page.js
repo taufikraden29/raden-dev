@@ -1,7 +1,7 @@
 'use client';
 
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
-import '@/pages/dashboard/TutorialEditorPage.css';
+import '@/_legacy/dashboard/TutorialEditorPage.css';
 import { createTutorial, generateUnlockCode, getTutorialById, updateTutorial } from '@/services/tutorialService';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Copy, GripVertical, Image as ImageIcon, Lock, Plus, RefreshCw, Save, X, Youtube } from 'lucide-react';

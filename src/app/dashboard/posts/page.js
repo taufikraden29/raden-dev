@@ -1,6 +1,6 @@
 'use client';
 
-import '@/pages/dashboard/PostsPage.css';
+import '@/_legacy/dashboard/PostsPage.css';
 import { deletePost, getAllPosts } from '@/services/blogService';
 import { format } from 'date-fns';
 import { Edit, ExternalLink, Plus, Search, Trash2 } from 'lucide-react';

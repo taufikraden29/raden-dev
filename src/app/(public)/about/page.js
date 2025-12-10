@@ -1,6 +1,6 @@
 'use client';
 
-import '@/pages/public/AboutPage.css';
+import '@/_legacy/public/AboutPage.css';
 import { useSettings } from '@/services/settingsService';
 import { Briefcase, Github, Linkedin, Mail, MapPin, Twitter } from 'lucide-react';
 

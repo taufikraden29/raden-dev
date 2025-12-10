@@ -2,7 +2,7 @@
 
 import { useBlogStats, usePosts } from '@/hooks/useData';
 import { Skeleton } from '@/components/ui/Skeleton';
-import '@/pages/dashboard/DashboardHome.css';
+import '@/_legacy/dashboard/DashboardHome.css';
 import { format } from 'date-fns';
 import { Eye, FileText, Plus, TrendingUp } from 'lucide-react';
 import Link from 'next/link';

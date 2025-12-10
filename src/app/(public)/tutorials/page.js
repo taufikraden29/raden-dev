@@ -1,7 +1,7 @@
 'use client';
 
 import { useTutorials } from '@/hooks/useData';
-import '@/pages/public/TutorialsPage.css';
+import '@/_legacy/public/TutorialsPage.css';
 import { getTutorialCategories, getUnlockedTutorials } from '@/services/tutorialService';
 import { BookOpen, ChevronRight, Clock, Layers, Lock, Search, X } from 'lucide-react';
 import Link from 'next/link';

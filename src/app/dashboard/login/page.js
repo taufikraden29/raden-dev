@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/authContext';
-import '@/pages/dashboard/LoginPage.css';
+import '@/_legacy/dashboard/LoginPage.css';
 import { AlertCircle, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';

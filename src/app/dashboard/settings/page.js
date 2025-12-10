@@ -1,6 +1,6 @@
 'use client';
 
-import '@/pages/dashboard/SettingsPage.css';
+import '@/_legacy/dashboard/SettingsPage.css';
 import {
     resetSettings, updateCtaSettings, updateFeaturesSettings, updateHeroSettings,
     updatePortfolioSettings, updateProfileSettings, updateSiteSettings,

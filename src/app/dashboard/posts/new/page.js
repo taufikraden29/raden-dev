@@ -1,7 +1,7 @@
 'use client';
 
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
-import '@/pages/dashboard/PostEditorPage.css';
+import '@/_legacy/dashboard/PostEditorPage.css';
 import { createPost, getAllCategories, getPostById, updatePost } from '@/services/blogService';
 import {
     AlertCircle,

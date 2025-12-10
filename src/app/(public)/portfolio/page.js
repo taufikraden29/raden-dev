@@ -1,6 +1,6 @@
 'use client';
 
-import '@/pages/public/PortfolioPage.css';
+import '@/_legacy/public/PortfolioPage.css';
 import { useSettings } from '@/services/settingsService';
 import { ExternalLink, Github, Star } from 'lucide-react';
 

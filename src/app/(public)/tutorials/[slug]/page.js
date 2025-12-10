@@ -1,7 +1,7 @@
 'use client';
 
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
-import '@/pages/public/TutorialDetailPage.css';
+import '@/_legacy/public/TutorialDetailPage.css';
 import { getTutorialBySlug, isTutorialUnlocked, unlockTutorial } from '@/services/tutorialService';
 import {
     ArrowLeft, BookOpen, CheckCircle, ChevronLeft, ChevronRight,

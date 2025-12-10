@@ -9,10 +9,12 @@ export const AuthProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check session on mount
-        const session = sessionStorage.getItem('blog_auth');
-        if (session === 'authenticated') {
-            setIsAuthenticated(true);
+        // Check session on mount (client-side only)
+        if (typeof window !== 'undefined') {
+            const session = sessionStorage.getItem('blog_auth');
+            if (session === 'authenticated') {
+                setIsAuthenticated(true);
+            }
         }
         setIsLoading(false);
     }, []);
@@ -52,8 +54,9 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
+    // Return default values for SSR/build time when not in provider
     if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
+        return { isAuthenticated: false, isLoading: true, login: async () => ({ success: false }), logout: () => { } };
     }
     return context;
 };
