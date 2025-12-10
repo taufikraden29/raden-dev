@@ -72,7 +72,17 @@ export default function SettingsPage() {
     };
 
     const addProject = () => {
-        const newProject = { id: Date.now().toString(), title: 'New Project', description: 'Project description...', image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600', tags: ['Tag1', 'Tag2'], liveUrl: '', githubUrl: '', featured: false };
+        const newProject = {
+            id: Date.now().toString(),
+            title: 'New Project',
+            description: 'Project description...',
+            image: '',
+            tags: ['Tag1', 'Tag2'],
+            liveUrl: '',
+            githubUrl: '',
+            featured: false,
+            type: 'programming' // 'programming', 'design', or 'both'
+        };
         setSettings(prev => ({ ...prev, portfolio: { ...prev.portfolio, projects: [newProject, ...prev.portfolio.projects] } }));
     };
 
@@ -208,19 +218,67 @@ export default function SettingsPage() {
                             {settings.portfolio.projects.map((project, index) => (
                                 <div key={project.id} className="feature-editor project-editor">
                                     <div className="project-editor-header">
-                                        <h4>{project.title || `Project ${index + 1}`}</h4>
+                                        <div className="project-header-left">
+                                            <span className={`project-type-badge ${project.type || 'programming'}`}>
+                                                {project.type === 'design' ? '🎨 Design' : project.type === 'both' ? '💻🎨 Both' : '💻 Programming'}
+                                            </span>
+                                            <h4>{project.title || `Project ${index + 1}`}</h4>
+                                        </div>
                                         <div className="project-editor-actions">
                                             <label className="form-checkbox inline"><input type="checkbox" checked={project.featured} onChange={(e) => handleProjectChange(index, 'featured', e.target.checked)} /><span>Featured</span></label>
                                             <button className="btn-icon danger" onClick={() => removeProject(index)} title="Delete"><Trash2 size={16} /></button>
                                         </div>
                                     </div>
-                                    <div className="form-grid">
-                                        <div className="form-group"><label className="form-label">Title</label><input type="text" className="form-input" value={project.title} onChange={(e) => handleProjectChange(index, 'title', e.target.value)} /></div>
-                                        <div className="form-group"><label className="form-label">Image URL</label><input type="url" className="form-input" value={project.image} onChange={(e) => handleProjectChange(index, 'image', e.target.value)} /></div>
-                                        <div className="form-group full-width"><label className="form-label">Description</label><textarea className="form-textarea" rows={2} value={project.description} onChange={(e) => handleProjectChange(index, 'description', e.target.value)} /></div>
-                                        <div className="form-group"><label className="form-label">Tags (comma separated)</label><input type="text" className="form-input" value={project.tags.join(', ')} onChange={(e) => handleProjectChange(index, 'tags', e.target.value)} /></div>
-                                        <div className="form-group"><label className="form-label">Live URL</label><input type="url" className="form-input" value={project.liveUrl} onChange={(e) => handleProjectChange(index, 'liveUrl', e.target.value)} /></div>
-                                        <div className="form-group"><label className="form-label">GitHub URL</label><input type="url" className="form-input" value={project.githubUrl} onChange={(e) => handleProjectChange(index, 'githubUrl', e.target.value)} /></div>
+
+                                    <div className="project-editor-content">
+                                        {/* Image Preview */}
+                                        <div className="project-image-preview">
+                                            {project.image ? (
+                                                <img src={project.image} alt={project.title} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                                            ) : null}
+                                            <div className="image-placeholder" style={{ display: project.image ? 'none' : 'flex' }}>
+                                                <Briefcase size={32} />
+                                                <span>No Image</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Form Fields */}
+                                        <div className="project-form-fields">
+                                            <div className="form-grid">
+                                                <div className="form-group">
+                                                    <label className="form-label">Title</label>
+                                                    <input type="text" className="form-input" value={project.title} onChange={(e) => handleProjectChange(index, 'title', e.target.value)} />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">Project Type</label>
+                                                    <select className="form-select" value={project.type || 'programming'} onChange={(e) => handleProjectChange(index, 'type', e.target.value)}>
+                                                        <option value="programming">💻 Programming</option>
+                                                        <option value="design">🎨 Design</option>
+                                                        <option value="both">💻🎨 Both</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group full-width">
+                                                    <label className="form-label">Image URL (paste URL dari Unsplash, Dribbble, Behance, dll)</label>
+                                                    <input type="url" className="form-input" placeholder="https://example.com/image.jpg" value={project.image} onChange={(e) => handleProjectChange(index, 'image', e.target.value)} />
+                                                </div>
+                                                <div className="form-group full-width">
+                                                    <label className="form-label">Description</label>
+                                                    <textarea className="form-textarea" rows={2} value={project.description} onChange={(e) => handleProjectChange(index, 'description', e.target.value)} />
+                                                </div>
+                                                <div className="form-group full-width">
+                                                    <label className="form-label">Tags (comma separated)</label>
+                                                    <input type="text" className="form-input" placeholder="React, Figma, UI/UX, etc" value={(project.tags || []).join(', ')} onChange={(e) => handleProjectChange(index, 'tags', e.target.value)} />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">{project.type === 'design' ? 'Portfolio/Behance URL' : 'Live URL'}</label>
+                                                    <input type="url" className="form-input" placeholder="https://..." value={project.liveUrl} onChange={(e) => handleProjectChange(index, 'liveUrl', e.target.value)} />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label className="form-label">{project.type === 'design' ? 'Dribbble URL' : 'GitHub URL'}</label>
+                                                    <input type="url" className="form-input" placeholder="https://..." value={project.githubUrl} onChange={(e) => handleProjectChange(index, 'githubUrl', e.target.value)} />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

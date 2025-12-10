@@ -340,9 +340,6 @@
 
 /* Featured Ribbon */
 .featured-ribbon {
-    position: absolute;
-    top: var(--space-md);
-    left: var(--space-md);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -353,6 +350,38 @@
     color: white;
     border-radius: var(--radius-full);
     z-index: 2;
+}
+
+/* Project badges container */
+.project-badges {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+    z-index: 2;
+}
+
+.type-badge {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+}
+
+.type-badge.programming {
+    background: rgba(0, 212, 255, 0.9);
+    color: white;
+}
+
+.type-badge.design {
+    background: rgba(236, 72, 153, 0.9);
+    color: white;
+}
+
+.type-badge.both {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: white;
 }
 
 /* Project Info */

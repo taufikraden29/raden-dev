@@ -121,9 +121,16 @@ export default function PortfolioPage() {
                                             </div>
                                         </div>
 
-                                        <span className="featured-ribbon">
-                                            <Star size={12} /> Featured
-                                        </span>
+                                        <div className="project-badges">
+                                            {project.type && (
+                                                <span className={`type-badge ${project.type}`}>
+                                                    {project.type === 'design' ? '🎨 Design' : project.type === 'both' ? '💻🎨' : '💻 Code'}
+                                                </span>
+                                            )}
+                                            <span className="featured-ribbon">
+                                                <Star size={12} /> Featured
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div className="project-info">
