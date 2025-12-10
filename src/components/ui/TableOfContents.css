@@ -1,0 +1,107 @@
+.table-of-contents {
+    position: sticky;
+    top: 100px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+}
+
+.toc-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toc-item {
+    position: relative;
+}
+
+.toc-item button {
+    display: block;
+    width: 100%;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    line-height: 1.4;
+}
+
+.toc-item button:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-tertiary);
+}
+
+.toc-item.active button {
+    color: var(--color-accent-primary);
+    background: rgba(0, 212, 255, 0.1);
+    font-weight: 500;
+}
+
+.toc-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 16px;
+    background: var(--color-accent-primary);
+    border-radius: 2px;
+}
+
+/* Indentation for h3 */
+.toc-level-3 button {
+    padding-left: calc(var(--space-sm) + var(--space-md));
+    font-size: 0.75rem;
+}
+
+/* Scrollbar styling */
+.table-of-contents::-webkit-scrollbar {
+    width: 4px;
+}
+
+.table-of-contents::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-of-contents::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+}
+
+.table-of-contents::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+/* Mobile: Show as collapsible at top */
+@media (max-width: 1024px) {
+    .table-of-contents {
+        position: relative;
+        top: 0;
+        max-height: none;
+        margin-bottom: var(--space-lg);
+    }
+}
