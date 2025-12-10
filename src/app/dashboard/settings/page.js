@@ -7,16 +7,33 @@ import {
     updateSocialSettings, updateStatsSettings, useSettings
 } from '@/services/settingsService';
 import {
-    Briefcase, Check, Globe, Layout, MessageSquare, Plus, RotateCcw, Save, Share2, Sparkles, Trash2, User
+    AlertCircle, Briefcase, Check, Globe, Layout, MessageSquare, Plus, RotateCcw, Save, Share2, Sparkles, Trash2, User
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function SettingsPage() {
     const { settings: loadedSettings, loading } = useSettings();
     const [settings, setSettings] = useState(null);
     const [activeTab, setActiveTab] = useState('hero');
     const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
+    const initialSettings = useRef(null);
+
+    // Track if settings changed from initial
+    useEffect(() => {
+        if (loadedSettings && !initialSettings.current) {
+            initialSettings.current = JSON.stringify(loadedSettings);
+        }
+    }, [loadedSettings]);
+
+    useEffect(() => {
+        if (settings && initialSettings.current) {
+            const changed = JSON.stringify(settings) !== initialSettings.current;
+            setHasChanges(changed);
+        }
+    }, [settings]);
 
     useEffect(() => {
         if (loadedSettings) setSettings(loadedSettings);
@@ -65,16 +82,23 @@ export default function SettingsPage() {
     };
 
     const handleSave = async () => {
-        await updateHeroSettings(settings.hero);
-        await updateStatsSettings(settings.stats);
-        await updateFeaturesSettings(settings.features);
-        await updateCtaSettings(settings.cta);
-        await updateProfileSettings(settings.profile);
-        await updateSocialSettings(settings.social);
-        await updateSiteSettings(settings.site);
-        await updatePortfolioSettings(settings.portfolio);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        setSaving(true);
+        try {
+            await updateHeroSettings(settings.hero);
+            await updateStatsSettings(settings.stats);
+            await updateFeaturesSettings(settings.features);
+            await updateCtaSettings(settings.cta);
+            await updateProfileSettings(settings.profile);
+            await updateSocialSettings(settings.social);
+            await updateSiteSettings(settings.site);
+            await updatePortfolioSettings(settings.portfolio);
+            initialSettings.current = JSON.stringify(settings);
+            setHasChanges(false);
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleReset = async () => {
@@ -100,10 +124,9 @@ export default function SettingsPage() {
     return (
         <div className="settings-page">
             <header className="page-header">
-                <div><h1>Settings</h1><p>Customize your website content</p></div>
-                <div className="header-actions">
-                    <button className="btn btn-secondary" onClick={() => setShowResetModal(true)}><RotateCcw size={18} /> Reset</button>
-                    <button className="btn btn-primary" onClick={handleSave}>{saved ? <Check size={18} /> : <Save size={18} />}{saved ? 'Saved!' : 'Save Changes'}</button>
+                <div>
+                    <h1>Settings</h1>
+                    <p>Customize your website content</p>
                 </div>
             </header>
 
@@ -270,6 +293,36 @@ export default function SettingsPage() {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Floating Action Bar */}
+            <div className="floating-action-bar">
+                {hasChanges && (
+                    <div className="unsaved-indicator">
+                        <span className="dot" />
+                        <span>Unsaved changes</span>
+                    </div>
+                )}
+                <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowResetModal(true)}
+                    disabled={saving}
+                >
+                    <RotateCcw size={18} /> Reset
+                </button>
+                <button
+                    className={`btn ${saved ? 'btn-success' : 'btn-primary'}`}
+                    onClick={handleSave}
+                    disabled={saving || !hasChanges}
+                >
+                    {saving ? (
+                        <><span className="spinner-small" /> Saving...</>
+                    ) : saved ? (
+                        <><Check size={18} /> Saved!</>
+                    ) : (
+                        <><Save size={18} /> Save Changes</>
+                    )}
+                </button>
             </div>
 
             {showResetModal && (
