@@ -73,7 +73,7 @@ export default function SettingsPage() {
 
     const addProject = () => {
         const newProject = { id: Date.now().toString(), title: 'New Project', description: 'Project description...', image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600', tags: ['Tag1', 'Tag2'], liveUrl: '', githubUrl: '', featured: false };
-        setSettings(prev => ({ ...prev, portfolio: { ...prev.portfolio, projects: [...prev.portfolio.projects, newProject] } }));
+        setSettings(prev => ({ ...prev, portfolio: { ...prev.portfolio, projects: [newProject, ...prev.portfolio.projects] } }));
     };
 
     const removeProject = (index) => {
