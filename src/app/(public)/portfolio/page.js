@@ -3,7 +3,6 @@
 import '@/_legacy/public/PortfolioPage.css';
 import { useSettings } from '@/services/settingsService';
 import { Code, ExternalLink, Folder, Github, Globe, Sparkles, Star } from 'lucide-react';
-import Image from 'next/image';
 
 export default function PortfolioPage() {
     const { settings, loading } = useSettings();
@@ -81,18 +80,16 @@ export default function PortfolioPage() {
                                 >
                                     <div className="project-image-wrapper">
                                         {project.image ? (
-                                            <Image
+                                            <img
                                                 src={project.image}
                                                 alt={project.title}
-                                                width={800}
-                                                height={500}
                                                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                                             />
-                                        ) : (
-                                            <div className="project-placeholder">
-                                                <Folder size={48} strokeWidth={1} />
-                                            </div>
-                                        )}
+                                        ) : null}
+                                        <div className="project-placeholder" style={{ display: project.image ? 'none' : 'flex' }}>
+                                            <Folder size={48} strokeWidth={1} />
+                                        </div>
 
                                         <div className="project-overlay">
                                             <div className="overlay-links">
@@ -167,18 +164,16 @@ export default function PortfolioPage() {
                                 >
                                     <div className="project-image-wrapper">
                                         {project.image ? (
-                                            <Image
+                                            <img
                                                 src={project.image}
                                                 alt={project.title}
-                                                width={600}
-                                                height={400}
                                                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                                             />
-                                        ) : (
-                                            <div className="project-placeholder">
-                                                <Code size={36} strokeWidth={1} />
-                                            </div>
-                                        )}
+                                        ) : null}
+                                        <div className="project-placeholder" style={{ display: project.image ? 'none' : 'flex' }}>
+                                            <Code size={36} strokeWidth={1} />
+                                        </div>
 
                                         <div className="project-overlay">
                                             <div className="overlay-links">

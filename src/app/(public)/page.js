@@ -8,7 +8,6 @@ import {
     ArrowRight, ArrowUpRight, BookOpen, Clock, Code, ExternalLink,
     Github, Globe, GraduationCap, Heart, Rocket, Shield, Sparkles, Star, Zap
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 // Icon mapping
@@ -182,18 +181,16 @@ export default function HomePage() {
                                 >
                                     <div className="project-image-wrapper">
                                         {project.image ? (
-                                            <Image
+                                            <img
                                                 src={project.image}
                                                 alt={project.title}
-                                                width={600}
-                                                height={400}
                                                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                                             />
-                                        ) : (
-                                            <div className="project-placeholder-modern">
-                                                <Code size={48} strokeWidth={1} />
-                                            </div>
-                                        )}
+                                        ) : null}
+                                        <div className="project-placeholder-modern" style={{ display: project.image ? 'none' : 'flex' }}>
+                                            <Code size={48} strokeWidth={1} />
+                                        </div>
                                         <div className="project-overlay">
                                             <div className="project-links-overlay">
                                                 {project.liveUrl && (
