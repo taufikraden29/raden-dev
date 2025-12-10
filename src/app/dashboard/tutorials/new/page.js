@@ -2,11 +2,13 @@
 
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 import '@/_legacy/dashboard/TutorialEditorPage.css';
+import { generateTutorialWithAI } from '@/services/aiService';
 import { createTutorial, generateUnlockCode, getTutorialById, updateTutorial } from '@/services/tutorialService';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Copy, GripVertical, Image as ImageIcon, Lock, Plus, RefreshCw, Save, X, Youtube } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Copy, GripVertical, Image as ImageIcon, Lock, Plus, RefreshCw, Save, Sparkles, Wand2, X, Youtube } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 const getYouTubeId = (url) => {
     if (!url) return null;
@@ -38,6 +40,66 @@ export default function TutorialEditorPage({ params }) {
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // AI Generation State
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedTutorial, setGeneratedTutorial] = useState(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    const handleGenerateWithAI = async () => {
+        if (!aiPrompt.trim()) {
+            toast.error('Masukkan deskripsi tutorial yang ingin dibuat');
+            return;
+        }
+
+        setIsGenerating(true);
+        const toastId = toast.loading('AI sedang membuat tutorial...');
+
+        try {
+            const tutorial = await generateTutorialWithAI(aiPrompt);
+            setGeneratedTutorial(tutorial);
+            setShowSuccessModal(true);
+            toast.dismiss(toastId);
+            toast.success('Tutorial berhasil dibuat!');
+        } catch (err) {
+            console.error('AI Generation Error:', err);
+            toast.error(`Gagal: ${err.message}`, { id: toastId });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const applyGeneratedTutorial = () => {
+        if (!generatedTutorial) return;
+
+        setFormData({
+            title: generatedTutorial.title || '',
+            description: generatedTutorial.description || '',
+            thumbnail: '',
+            category: generatedTutorial.category || '',
+            difficulty: generatedTutorial.difficulty || 'beginner',
+            estimated_time: generatedTutorial.estimated_time || '10 min',
+            published: false,
+            is_premium: false,
+            unlock_code: '',
+            steps: generatedTutorial.steps?.map(step => ({
+                title: step.title || '',
+                content: step.content || '',
+                youtube_url: ''
+            })) || [{ title: '', content: '', youtube_url: '' }]
+        });
+
+        setShowSuccessModal(false);
+        setGeneratedTutorial(null);
+        setAiPrompt('');
+        toast.success('Tutorial diterapkan! Silakan edit jika perlu.');
+    };
+
+    const discardGeneratedTutorial = () => {
+        setShowSuccessModal(false);
+        setGeneratedTutorial(null);
+    };
 
     useEffect(() => {
         const loadTutorial = async () => {
@@ -133,6 +195,7 @@ export default function TutorialEditorPage({ params }) {
 
     return (
         <div className="tutorial-editor-page">
+            <Toaster position="top-right" />
             <header className="editor-header">
                 <div className="header-left">
                     <button onClick={() => router.push('/dashboard/tutorials')} className="back-btn"><ArrowLeft size={18} /></button>
@@ -149,6 +212,38 @@ export default function TutorialEditorPage({ params }) {
             </header>
 
             {error && <div className="error-banner">{error}</div>}
+
+            {/* AI Generate Section */}
+            {!isEditing && (
+                <div className="ai-generate-section">
+                    <div className="ai-section-header">
+                        <Wand2 size={20} />
+                        <h3>Generate Tutorial dengan AI</h3>
+                    </div>
+                    <div className="ai-prompt-row">
+                        <input
+                            type="text"
+                            className="ai-prompt-input"
+                            placeholder="Jelaskan tutorial yang ingin dibuat, misal: 'Cara deploy Next.js ke Vercel'"
+                            value={aiPrompt}
+                            onChange={(e) => setAiPrompt(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleGenerateWithAI()}
+                            disabled={isGenerating}
+                        />
+                        <button
+                            className="ai-generate-btn"
+                            onClick={handleGenerateWithAI}
+                            disabled={isGenerating || !aiPrompt.trim()}
+                        >
+                            {isGenerating ? (
+                                <><span className="spinner-small" /> Generating...</>
+                            ) : (
+                                <><Sparkles size={18} /> Generate</>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="editor-layout">
                 <div className="info-panel">
@@ -282,6 +377,54 @@ export default function TutorialEditorPage({ params }) {
                     <span>{isSaving ? 'Menyimpan...' : 'Simpan'}</span>
                 </button>
             </div>
+
+            {/* AI Success Modal */}
+            {showSuccessModal && generatedTutorial && (
+                <div className="ai-modal-overlay" onClick={discardGeneratedTutorial}>
+                    <div className="ai-success-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="ai-modal-header">
+                            <h2><CheckCircle2 size={24} /> Tutorial Berhasil Dibuat!</h2>
+                            <button className="ai-modal-close" onClick={discardGeneratedTutorial}><X size={20} /></button>
+                        </div>
+                        <div className="ai-modal-body">
+                            <div className="ai-preview-section">
+                                <h4>Judul</h4>
+                                <div className="ai-preview-value ai-preview-title">{generatedTutorial.title}</div>
+                            </div>
+                            <div className="ai-preview-section">
+                                <h4>Deskripsi</h4>
+                                <div className="ai-preview-value">{generatedTutorial.description}</div>
+                            </div>
+                            <div className="ai-preview-section">
+                                <h4>Metadata</h4>
+                                <div className="ai-preview-meta">
+                                    <span className="ai-preview-badge">{generatedTutorial.category}</span>
+                                    <span className="ai-preview-badge">{generatedTutorial.difficulty}</span>
+                                    <span className="ai-preview-badge">{generatedTutorial.estimated_time}</span>
+                                </div>
+                            </div>
+                            <div className="ai-preview-section">
+                                <h4>Langkah-langkah ({generatedTutorial.steps?.length || 0})</h4>
+                                <div className="ai-steps-preview">
+                                    {generatedTutorial.steps?.map((step, index) => (
+                                        <div key={index} className="ai-step-item">
+                                            <span className="ai-step-num">{index + 1}</span>
+                                            <span className="ai-step-title">{step.title}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="ai-modal-footer">
+                            <button className="btn btn-secondary" onClick={discardGeneratedTutorial}>Buang</button>
+                            <button className="btn btn-primary" onClick={applyGeneratedTutorial}>
+                                <CheckCircle2 size={16} /> Gunakan Tutorial
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

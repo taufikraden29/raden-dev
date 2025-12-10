@@ -4,6 +4,7 @@ import CodeBlock from '@/components/ui/CodeBlock';
 import '@/components/ui/MarkdownRenderer.css';
 import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
+import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 
 // Extract YouTube video ID from various URL formats
@@ -36,18 +37,12 @@ const YouTubeEmbed = memo(function YouTubeEmbed({ videoId, title }) {
     );
 });
 
-// Helper function to generate slug ID
-const generateSlugId = (children) => {
-    const text = typeof children === 'string' ? children :
-        Array.isArray(children) ? children.join('') : String(children);
-    return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-};
-
 const MarkdownRenderer = memo(function MarkdownRenderer({ content }) {
-    // Memoize remarkPlugins array
+    // Memoize plugins array
     const remarkPlugins = useMemo(() => [remarkGfm], []);
+    const rehypePlugins = useMemo(() => [rehypeSlug], []);
 
-    // Memoize components map to prevent recreation on each render
+    // Components map - memoized since we no longer need per-render slug generation
     const components = useMemo(() => ({
         code({ node, inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
@@ -66,16 +61,10 @@ const MarkdownRenderer = memo(function MarkdownRenderer({ content }) {
                 </code>
             );
         },
-        h1: ({ children }) => <h1 className="md-h1">{children}</h1>,
-        h2: ({ children }) => {
-            const id = generateSlugId(children);
-            return <h2 id={id} className="md-h2">{children}</h2>;
-        },
-        h3: ({ children }) => {
-            const id = generateSlugId(children);
-            return <h3 id={id} className="md-h3">{children}</h3>;
-        },
-        h4: ({ children }) => <h4 className="md-h4">{children}</h4>,
+        h1: ({ children, ...props }) => <h1 className="md-h1" {...props}>{children}</h1>,
+        h2: ({ children, ...props }) => <h2 className="md-h2" {...props}>{children}</h2>,
+        h3: ({ children, ...props }) => <h3 className="md-h3" {...props}>{children}</h3>,
+        h4: ({ children, ...props }) => <h4 className="md-h4" {...props}>{children}</h4>,
         p: ({ children, node }) => {
             // Check if paragraph contains only a YouTube link
             if (node.children?.length === 1) {
@@ -126,6 +115,7 @@ const MarkdownRenderer = memo(function MarkdownRenderer({ content }) {
         <div className="markdown-content">
             <ReactMarkdown
                 remarkPlugins={remarkPlugins}
+                rehypePlugins={rehypePlugins}
                 components={components}
             >
                 {content}
@@ -135,5 +125,3 @@ const MarkdownRenderer = memo(function MarkdownRenderer({ content }) {
 });
 
 export default MarkdownRenderer;
-
-

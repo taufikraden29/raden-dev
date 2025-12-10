@@ -1,16 +1,18 @@
 'use client';
 
 import '@/components/ui/TableOfContents.css';
+import GithubSlugger from 'github-slugger';
 import { List } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 const TableOfContents = memo(function TableOfContents({ content }) {
     const [activeId, setActiveId] = useState('');
 
-    // Extract headings from markdown content - memoized
+    // Extract headings from markdown content using github-slugger (same as rehype-slug)
     const headings = useMemo(() => {
         if (!content) return [];
 
+        const slugger = new GithubSlugger();
         const lines = content.split('\n');
         const extracted = [];
 
@@ -20,12 +22,8 @@ const TableOfContents = memo(function TableOfContents({ content }) {
             if (match) {
                 const level = match[1].length;
                 const text = match[2].trim();
-                // Create slug for ID
-                const id = text
-                    .toLowerCase()
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
+                // github-slugger generates the same slugs as rehype-slug
+                const id = slugger.slug(text);
 
                 extracted.push({ id, text, level });
             }
@@ -63,7 +61,7 @@ const TableOfContents = memo(function TableOfContents({ content }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [headings]);
 
-    // Smooth scroll to heading - memoized callback
+    // Smooth scroll to heading
     const scrollToHeading = useCallback((id) => {
         const element = document.getElementById(id);
         if (element) {
@@ -73,6 +71,7 @@ const TableOfContents = memo(function TableOfContents({ content }) {
                 top: elementPosition - offset,
                 behavior: 'smooth'
             });
+            setActiveId(id);
         }
     }, []);
 
@@ -102,4 +101,3 @@ const TableOfContents = memo(function TableOfContents({ content }) {
 });
 
 export default TableOfContents;
-

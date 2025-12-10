@@ -18,13 +18,12 @@ const BlogCard = memo(function BlogCard({ post, featured = false }) {
         <article className={`blog-card card ${featured ? 'featured' : ''}`}>
             {post.featured_image && (
                 <div className="card-image">
-                    <Image
+                    <img
                         src={post.featured_image}
                         alt={post.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        style={{ objectFit: 'cover' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         loading="lazy"
+                        onError={(e) => e.target.style.display = 'none'}
                     />
                 </div>
             )}

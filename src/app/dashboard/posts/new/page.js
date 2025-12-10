@@ -2,6 +2,7 @@
 
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 import '@/_legacy/dashboard/PostEditorPage.css';
+import { formatContentWithAI, generatePostWithAI } from '@/services/aiService';
 import { createPost, getAllCategories, getPostById, updatePost } from '@/services/blogService';
 import {
     AlertCircle,
@@ -15,8 +16,11 @@ import {
     Columns,
     Eye,
     FileText,
+    Heading1,
+    Heading2,
+    Heading3,
     HelpCircle,
-    Image,
+    Image as ImageIcon,
     Italic,
     Lightbulb,
     Link as LinkIcon,
@@ -25,12 +29,16 @@ import {
     Minus,
     Quote,
     Save,
+    Sparkles,
     Table,
+    Terminal,
     Type,
+    Wand2,
     X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 const AUTOSAVE_KEY = 'blog_post_draft';
 const AUTOSAVE_INTERVAL = 30000;
@@ -77,6 +85,12 @@ export default function PostEditorPage({ params }) {
     const [selectedLanguage, setSelectedLanguage] = useState('javascript');
     const [showLangDropdown, setShowLangDropdown] = useState(false);
     const [showTutorial, setShowTutorial] = useState(false);
+
+    // AI Generate Post Modal state
+    const [showAiGenerateModal, setShowAiGenerateModal] = useState(false);
+    const [aiGeneratePrompt, setAiGeneratePrompt] = useState('');
+    const [isAiGenerating, setIsAiGenerating] = useState(false);
+    const [aiEndpoint, setAiEndpoint] = useState('coding'); // 'coding' or 'general'
 
     // Load tutorial preference from localStorage
     useEffect(() => {
@@ -274,9 +288,179 @@ export default function PostEditorPage({ params }) {
         });
     };
 
+    const [aiPreview, setAiPreview] = useState(null); // { type: 'content' | 'title', original: string, generated: string, selectionStart?: number, selectionEnd?: number }
+
     const clearDraft = () => {
         if (typeof window !== 'undefined') {
             localStorage.removeItem(AUTOSAVE_KEY);
+        }
+    };
+
+    const handleFormatWithAI = async () => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = formData.content.substring(start, end);
+
+        // Logic: 
+        // 1. If text selected or content exists -> REWRITE mode
+        // 2. If content empty but title exists -> GENERATE mode
+
+        const hasContent = formData.content.trim().length > 0;
+        const hasTitle = formData.title.trim().length > 0;
+
+        if (!hasContent && !hasTitle) {
+            toast.error('Please enter a title first to generate content.');
+            return;
+        }
+
+        let instruction = null;
+        let textToProcess = "";
+
+        if (selectedText || hasContent) {
+            // Rewrite Mode
+            textToProcess = selectedText || formData.content;
+            // Use default rewrite prompt in API
+        } else if (hasTitle) {
+            // Generate Mode
+            textToProcess = `Title: ${formData.title}`;
+            instruction = `You are an expert technical blog writer. Generate a comprehensive, structured, and engaging blog post based on the title: "${formData.title}". Include an introduction, main body with headings, and conclusion. Use Markdown.`;
+        }
+
+        const toastId = toast.loading('AI is working on your content...');
+
+        try {
+            // 1. Open Preview Modal IMMEDIATELY with empty state
+            setAiPreview({
+                type: 'content',
+                original: selectedText || (hasContent ? formData.content : ''),
+                generated: '', // Start empty for streaming
+                selectionStart: start,
+                selectionEnd: end,
+                isSelection: !!selectedText,
+                isStreaming: true // Add flag to show loading indicator if needed
+            });
+
+            // 2. Start Streaming
+            const resultText = await formatContentWithAI(textToProcess, instruction, (chunk) => {
+                setAiPreview(prev => {
+                    if (!prev) return null; // Safety check
+                    return {
+                        ...prev,
+                        generated: (prev.generated || '') + chunk // Append chunk
+                    };
+                });
+            });
+
+            // 3. Mark as done
+            setAiPreview(prev => prev ? ({ ...prev, isStreaming: false }) : null);
+
+            console.log('AI Streaming Complete'); // Debugging
+
+            toast.dismiss(toastId);
+        } catch (error) {
+            console.error('AI Error:', error);
+            toast.error(`Failed: ${error.message}`, { id: toastId });
+        }
+    };
+
+    const handleGenerateTitle = async () => {
+        const hasContent = formData.content.trim().length > 0;
+        const hasTitle = formData.title.trim().length > 0;
+
+        if (!hasContent && !hasTitle) {
+            toast.error('Please write some content first to generate a title.');
+            return;
+        }
+
+        const toastId = toast.loading('Generating perfect title...');
+        let textToProcess = "";
+        let instruction = "";
+
+        if (hasTitle) {
+            // Optimize existing title
+            textToProcess = formData.title;
+            instruction = `The user has written the title: "${formData.title}". Rewrite this title to be more engaging, clickable, and SEO-friendly for a technical blog post. Keep the original meaning but make it better. Return ONLY the new title text, no quotes.`;
+        } else {
+            // Generate from content
+            textToProcess = formData.content.substring(0, 2000); // Send first 2000 chars context
+            instruction = "Generate a catchy, concise, and SEO-friendly title for a blog post based on this content. Return ONLY the title text, no quotes.";
+        }
+
+        try {
+            const newTitle = await formatContentWithAI(textToProcess, instruction);
+            // Remove any surrounding quotes if AI adds them
+            const cleanTitle = newTitle.replace(/^["']|["']$/g, '');
+
+            // Open Preview Modal
+            setAiPreview({
+                type: 'title',
+                original: formData.title,
+                generated: cleanTitle
+            });
+
+            toast.dismiss(toastId);
+        } catch (error) {
+            console.error('AI Title Error:', error);
+            toast.error(`Failed: ${error.message}`, { id: toastId });
+        }
+    };
+
+    const applyAiChanges = () => {
+        if (!aiPreview) return;
+
+        if (aiPreview.type === 'content') {
+            let newContent;
+            if (aiPreview.isSelection) {
+                newContent = formData.content.substring(0, aiPreview.selectionStart) + aiPreview.generated + formData.content.substring(aiPreview.selectionEnd);
+            } else {
+                newContent = aiPreview.generated;
+            }
+            setFormData(prev => ({ ...prev, content: newContent }));
+            toast.success('Content updated!');
+        } else if (aiPreview.type === 'title') {
+            setFormData(prev => ({ ...prev, title: aiPreview.generated }));
+            toast.success('Title updated!');
+        }
+
+        setAiPreview(null);
+    };
+
+    // AI Generate Complete Post
+    const handleGeneratePostWithAI = async () => {
+        if (!aiGeneratePrompt.trim()) {
+            toast.error('Masukkan deskripsi post yang ingin dibuat');
+            return;
+        }
+
+        setIsAiGenerating(true);
+        const toastId = toast.loading('AI sedang membuat blog post...');
+
+        try {
+            const post = await generatePostWithAI(aiGeneratePrompt, aiEndpoint);
+
+            // Populate all form fields
+            setFormData({
+                title: post.title || '',
+                excerpt: post.excerpt || '',
+                content: post.content || '',
+                category: post.category || '',
+                tags: post.tags || '',
+                featuredImage: post.featuredImage || '',
+                published: false
+            });
+
+            setShowAiGenerateModal(false);
+            setAiGeneratePrompt('');
+            toast.dismiss(toastId);
+            toast.success('Blog post berhasil di-generate! Silakan review dan edit.', { duration: 5000 });
+        } catch (err) {
+            console.error('AI Post Generation Error:', err);
+            toast.error(`Gagal: ${err.message}`, { id: toastId });
+        } finally {
+            setIsAiGenerating(false);
         }
     };
 
@@ -350,6 +534,11 @@ export default function PostEditorPage({ params }) {
                         <button type="button" className={`toggle-btn ${viewMode === 'preview' ? 'active' : ''}`}
                             onClick={() => setViewMode('preview')} title="Preview"><Eye size={16} /></button>
                     </div>
+                    {!isEditing && (
+                        <button type="button" className="btn btn-ai" onClick={() => setShowAiGenerateModal(true)}>
+                            <Wand2 size={18} /><span>Generate with AI</span>
+                        </button>
+                    )}
                     <button type="button" className="btn btn-secondary" onClick={() => setShowCheatSheet(true)}>
                         <HelpCircle size={18} /><span>Markdown</span>
                     </button>
@@ -361,6 +550,57 @@ export default function PostEditorPage({ params }) {
             </header>
 
             {error && <div className="error-banner"><AlertCircle size={18} />{error}</div>}
+
+            {/* AI Generate Section - Prominent */}
+            {!isEditing && (
+                <div className="ai-generate-section">
+                    <div className="ai-section-header">
+                        <Wand2 size={20} />
+                        <h3>Generate Blog Post dengan AI</h3>
+                    </div>
+                    <div className="ai-endpoint-row">
+                        <span className="endpoint-label">Endpoint:</span>
+                        <div className="endpoint-toggle">
+                            <button
+                                className={`endpoint-btn ${aiEndpoint === 'coding' ? 'active' : ''}`}
+                                onClick={() => setAiEndpoint('coding')}
+                                disabled={isAiGenerating}
+                            >
+                                <Code size={14} /> Coding
+                            </button>
+                            <button
+                                className={`endpoint-btn ${aiEndpoint === 'general' ? 'active' : ''}`}
+                                onClick={() => setAiEndpoint('general')}
+                                disabled={isAiGenerating}
+                            >
+                                <Sparkles size={14} /> General
+                            </button>
+                        </div>
+                    </div>
+                    <div className="ai-prompt-row">
+                        <input
+                            type="text"
+                            className="ai-prompt-input"
+                            placeholder="Jelaskan topik blog post, misal: 'Tutorial React Hooks untuk pemula'"
+                            value={aiGeneratePrompt}
+                            onChange={(e) => setAiGeneratePrompt(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleGeneratePostWithAI()}
+                            disabled={isAiGenerating}
+                        />
+                        <button
+                            className="ai-generate-btn"
+                            onClick={handleGeneratePostWithAI}
+                            disabled={isAiGenerating || !aiGeneratePrompt.trim()}
+                        >
+                            {isAiGenerating ? (
+                                <><span className="spinner-small" /> Generating...</>
+                            ) : (
+                                <><Sparkles size={18} /> Generate</>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {showTutorial && (
                 <div className="tutorial-section">
@@ -394,7 +634,33 @@ export default function PostEditorPage({ params }) {
                         <form id="post-form" onSubmit={handleSubmit}>
                             <div className="form-section">
                                 <div className="form-group">
-                                    <label className="form-label" htmlFor="title">Title <span className="required">*</span></label>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                        <label className="form-label" htmlFor="title" style={{ marginBottom: 0 }}>Title <span className="required">*</span></label>
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateTitle}
+                                            className="ai-gen-btn"
+                                            title="Generate Title with AI"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                background: 'none',
+                                                border: '1px solid #e2e8f0',
+                                                padding: '4px 8px',
+                                                borderRadius: '20px',
+                                                fontSize: '0.75rem',
+                                                color: '#64748b',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseOver={(e) => { e.currentTarget.style.color = '#6366f1'; e.currentTarget.style.borderColor = '#6366f1'; }}
+                                            onMouseOut={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                        >
+                                            <Sparkles size={14} />
+                                            <span>AI Gen</span>
+                                        </button>
+                                    </div>
                                     <input id="title" name="title" type="text" className="form-input title-input"
                                         placeholder="Enter post title" value={formData.title} onChange={handleChange} required />
                                 </div>
@@ -433,7 +699,7 @@ export default function PostEditorPage({ params }) {
                                     <div className="toolbar-divider" />
                                     <div className="toolbar-group">
                                         <button type="button" onMouseDown={(e) => { e.preventDefault(); insertMarkdown('link', 'link'); }} title="Link"><LinkIcon size={16} /></button>
-                                        <button type="button" onMouseDown={(e) => { e.preventDefault(); insertMarkdown('image', 'alt'); }} title="Image"><Image size={16} /></button>
+                                        <button type="button" onMouseDown={(e) => { e.preventDefault(); insertMarkdown('image', 'alt'); }} title="Image"><ImageIcon size={16} /></button>
                                     </div>
                                     <div className="toolbar-divider" />
                                     <div className="toolbar-group">
@@ -451,6 +717,29 @@ export default function PostEditorPage({ params }) {
                                     <div className="toolbar-divider" />
                                     <button type="button" className="paste-code-btn" onClick={handlePasteAsCode} title="Paste as Code (Ctrl+Shift+V)">
                                         <Clipboard size={16} /><span>Paste Code</span>
+                                    </button>
+                                    <div className="toolbar-divider" />
+                                    <button
+                                        type="button"
+                                        className="ai-format-btn"
+                                        onClick={handleFormatWithAI}
+                                        title="Rewrite with AI"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                            color: 'white',
+                                            border: 'none',
+                                            padding: '6px 12px',
+                                            borderRadius: '6px',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 500,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Wand2 size={16} />
+                                        <span>AI Rewrite</span>
                                     </button>
                                 </div>
                                 <textarea ref={textareaRef} id="content" name="content" className="form-textarea content-textarea"
@@ -572,6 +861,42 @@ export default function PostEditorPage({ params }) {
                 </div>
             )}
 
+            {aiPreview && (
+                <div className="modal-overlay" onClick={() => setAiPreview(null)}>
+                    <div className="modal ai-preview-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3><Sparkles size={18} /> AI Generated Result</h3>
+                            <button className="modal-close" onClick={() => setAiPreview(null)}><X size={20} /></button>
+                        </div>
+                        <div className="ai-preview-content">
+                            <div className="preview-split">
+                                <div className="preview-column original">
+                                    <h4>Original</h4>
+                                    <pre>{aiPreview.original || '(Empty)'}</pre>
+                                </div>
+                                <div className="preview-column generated">
+                                    <h4>AI Result</h4>
+                                    <div className="markdown-preview">
+                                        {/* Simple render for preview - actual markdown rendering might require component */}
+                                        {aiPreview.type === 'title' ? (
+                                            <div className="title-preview">{aiPreview.generated}</div>
+                                        ) : (
+                                            <MarkdownRenderer content={aiPreview.generated || '*Waiting for content...*'} />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn btn-secondary" onClick={() => setAiPreview(null)}>Discard</button>
+                                <button type="button" className="btn btn-primary" onClick={applyAiChanges}>
+                                    <CheckCircle2 size={16} /> Apply Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Floating Action Bar */}
             <div className="floating-action-bar">
                 <div className="floating-bar-info">
@@ -595,6 +920,53 @@ export default function PostEditorPage({ params }) {
                     <span>{isSaving ? 'Saving...' : 'Save Post'}</span>
                 </button>
             </div>
+
+            {/* AI Generate Post Modal */}
+            {showAiGenerateModal && (
+                <div className="ai-modal-overlay" onClick={() => setShowAiGenerateModal(false)}>
+                    <div className="ai-generate-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="ai-modal-header">
+                            <h2><Wand2 size={24} /> Generate Blog Post dengan AI</h2>
+                            <button className="ai-modal-close" onClick={() => setShowAiGenerateModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="ai-modal-body">
+                            <p className="ai-modal-desc">
+                                Jelaskan topik blog post yang ingin dibuat. AI akan menghasilkan judul, excerpt, konten, kategori, tags, dan featured image.
+                            </p>
+                            <textarea
+                                className="ai-prompt-textarea"
+                                placeholder="Contoh: Tutorial lengkap tentang React Hooks untuk pemula, mencakup useState, useEffect, dan custom hooks dengan contoh kode praktis"
+                                value={aiGeneratePrompt}
+                                onChange={(e) => setAiGeneratePrompt(e.target.value)}
+                                rows={4}
+                                disabled={isAiGenerating}
+                            />
+                        </div>
+                        <div className="ai-modal-footer">
+                            <button
+                                className="btn btn-secondary"
+                                onClick={() => setShowAiGenerateModal(false)}
+                                disabled={isAiGenerating}
+                            >
+                                Batal
+                            </button>
+                            <button
+                                className="btn btn-ai"
+                                onClick={handleGeneratePostWithAI}
+                                disabled={isAiGenerating || !aiGeneratePrompt.trim()}
+                            >
+                                {isAiGenerating ? (
+                                    <><span className="spinner-small" /> Generating...</>
+                                ) : (
+                                    <><Sparkles size={18} /> Generate Post</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
